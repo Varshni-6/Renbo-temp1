@@ -1,44 +1,38 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/journal_entry.dart';
 
 class JournalStorage {
-  static const String _journalKey = 'journalEntries';
+  static const String _boxName = 'journalEntries';
+  static late Box<JournalEntry> _box;
 
-  // This is a simple list to hold the entries in memory.
-  // In a real app, you would load this from storage.
-  // For this example, we will manage the list directly
-  // with the add and update methods.
-  static List<Map<String, dynamic>> entries = [];
+  static Future<List<JournalEntry>> getEntries() async {
+    return _box.values.toList();
+  }
 
-  static Future<void> loadEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? entriesString = prefs.getString(_journalKey);
-    if (entriesString != null) {
-      final List<dynamic> decodedList = json.decode(entriesString);
-      entries = decodedList.cast<Map<String, dynamic>>();
+  // Method to initialize Hive and open the box
+  static Future<void> init() async {
+    _box = await Hive.openBox<JournalEntry>(_boxName);
+  }
+
+  // Add a new entry to the box
+  static void addEntry(JournalEntry entry) {
+    _box.add(entry);
+  }
+
+  // Update an existing entry
+  static void updateEntry(int index, JournalEntry entry) {
+    if (index >= 0 && index < _box.length) {
+      _box.putAt(index, entry);
     }
   }
 
-  static Future<void> addEntry(Map<String, dynamic> entry) async {
-    final prefs = await SharedPreferences.getInstance();
-    entries.add(entry);
-    await prefs.setString(_journalKey, json.encode(entries));
-  }
-
-  static Future<void> updateEntry(
-      int index, Map<String, dynamic> updatedEntry) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (index >= 0 && index < entries.length) {
-      entries[index] = updatedEntry;
-      await prefs.setString(_journalKey, json.encode(entries));
-    }
-  }
-
+  // Delete an entry
   static Future<void> deleteEntry(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (index >= 0 && index < entries.length) {
-      entries.removeAt(index);
-      await prefs.setString(_journalKey, json.encode(entries));
+    if (index >= 0 && index < _box.length) {
+      await _box.deleteAt(index);
     }
   }
+
+  // Get all entries
+  static List<JournalEntry> get entries => _box.values.toList();
 }

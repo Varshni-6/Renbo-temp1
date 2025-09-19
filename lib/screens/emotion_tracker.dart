@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'journal_screen.dart';
+import 'journal_entries.dart';
 
 class EmotionTrackerScreen extends StatelessWidget {
   const EmotionTrackerScreen({super.key});
@@ -65,7 +66,15 @@ class EmotionTrackerScreen extends StatelessWidget {
             title: const Text("Would you like to journal these emotions?"),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context), // close dialog
+                onPressed: () {
+                  Navigator.pop(context); // close dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const JournalEntriesScreen(),
+                    ),
+                  );
+                },
                 child: const Text("No"),
               ),
               ElevatedButton(

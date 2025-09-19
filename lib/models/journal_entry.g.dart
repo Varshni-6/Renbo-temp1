@@ -16,25 +16,29 @@ class JournalEntryAdapter extends TypeAdapter<JournalEntry> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return JournalEntry()
-      ..content = fields[0] as String
-      ..timestamp = fields[1] as DateTime
-      ..mood = fields[2] as String?
-      ..attachmentPath = fields[3] as String?;
+    return JournalEntry(
+      content: fields[0] as String,
+      timestamp: fields[1] as DateTime,
+      emotion: fields[2] as String?,
+      imagePath: fields[3] as String?,
+      audioPath: fields[4] as String?,
+    );
   }
 
   @override
   void write(BinaryWriter writer, JournalEntry obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.content)
       ..writeByte(1)
       ..write(obj.timestamp)
       ..writeByte(2)
-      ..write(obj.mood)
+      ..write(obj.emotion)
       ..writeByte(3)
-      ..write(obj.attachmentPath);
+      ..write(obj.imagePath)
+      ..writeByte(4)
+      ..write(obj.audioPath);
   }
 
   @override

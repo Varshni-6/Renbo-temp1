@@ -11,8 +11,19 @@ class JournalEntry extends HiveObject {
   late DateTime timestamp;
 
   @HiveField(2)
-  late String? mood;
+  late String? emotion;
 
   @HiveField(3)
-  late String? attachmentPath;
+  late String? imagePath;
+
+  @HiveField(4)
+  late String? audioPath;
+
+  JournalEntry({
+    required this.content,
+    required this.timestamp,
+    this.emotion,
+    this.imagePath,
+    this.audioPath,
+  });
 }

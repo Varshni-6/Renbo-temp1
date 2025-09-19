@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../services/journal_storage.dart';
 import 'journal_entries.dart';
+import '../models/journal_entry.dart';
 
 class JournalScreen extends StatefulWidget {
   final String emotion;
@@ -20,11 +23,15 @@ class _JournalScreenState extends State<JournalScreen> {
   String? recordedAudioPath;
   bool isRecording = false;
   final _audioRecorder = AudioRecorder();
+  final SpeechToText _speechToText = SpeechToText();
+  bool _isListening = false;
+  final FlutterTts _flutterTts = FlutterTts();
 
   @override
   void dispose() {
     _controller.dispose();
     _audioRecorder.dispose();
+    _flutterTts.stop();
     super.dispose();
   }
 
@@ -39,13 +46,14 @@ class _JournalScreenState extends State<JournalScreen> {
       return;
     }
 
-    final Map<String, String> entry = {
-      'emotion': widget.emotion,
-      'content': text,
-      'date': DateTime.now().toIso8601String(),
-      'imagePath': pickedImage?.path ?? '',
-      'audioPath': recordedAudioPath ?? '',
-    };
+    // Correct instantiation using the constructor with named parameters.
+    final entry = JournalEntry(
+      content: text,
+      timestamp: DateTime.now(),
+      emotion: widget.emotion,
+      imagePath: pickedImage?.path,
+      audioPath: recordedAudioPath,
+    );
 
     JournalStorage.addEntry(entry);
 
@@ -82,7 +90,6 @@ class _JournalScreenState extends State<JournalScreen> {
         final tempDir = await getTemporaryDirectory();
         final path = '${tempDir.path}/${DateTime.now().toIso8601String()}.m4a';
 
-        // Updated code to fix the 'start' method error
         await _audioRecorder.start(
           const RecordConfig(encoder: AudioEncoder.aacLc),
           path: path,
@@ -101,6 +108,41 @@ class _JournalScreenState extends State<JournalScreen> {
         );
       }
     }
+  }
+
+  Future<void> _startListening() async {
+    bool available = await _speechToText.initialize(
+      onStatus: (status) {
+        if (status == 'listening') {
+          setState(() => _isListening = true);
+        } else {
+          setState(() => _isListening = false);
+        }
+      },
+    );
+    if (available) {
+      _speechToText.listen(
+        onResult: (result) {
+          _controller.text = result.recognizedWords;
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Speech recognition not available."),
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopListening() async {
+    await _speechToText.stop();
+    setState(() => _isListening = false);
+  }
+
+  Future<void> _speakText() async {
+    await _flutterTts.setLanguage("en-US");
+    await _flutterTts.speak(_controller.text);
   }
 
   @override
@@ -177,6 +219,32 @@ class _JournalScreenState extends State<JournalScreen> {
                   onPressed: _pickImage,
                   icon: const Icon(Icons.image, color: Colors.white),
                   label: const Text('Add Image',
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF568F87),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _isListening ? _stopListening : _startListening,
+                  icon: Icon(_isListening ? Icons.mic_off : Icons.mic,
+                      color: Colors.white),
+                  label: Text(_isListening ? 'Stop STT' : 'Start STT',
+                      style: const TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _isListening ? Colors.blue : const Color(0xFF568F87),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _speakText,
+                  icon: const Icon(Icons.volume_up, color: Colors.white),
+                  label: const Text('Read Aloud',
                       style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF568F87),

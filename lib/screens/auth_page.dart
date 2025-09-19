@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
+import '/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '/screens/home_screen.dart';
 
 class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});
+
   @override
   _AuthPageState createState() => _AuthPageState();
 }
@@ -17,30 +21,38 @@ class _AuthPageState extends State<AuthPage> {
     return Scaffold(
       appBar: AppBar(title: Text(isLogin ? 'Login' : 'Sign Up')),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(labelText: "Email"),
             ),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: "Password"),
+              decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
+                UserCredential? userCredential;
                 if (isLogin) {
-                  await _authService.login(
+                  userCredential = await _authService.login(
                     emailController.text,
                     passwordController.text,
+                    context,
                   );
                 } else {
-                  await _authService.signUp(
+                  userCredential = await _authService.signUp(
                     emailController.text,
                     passwordController.text,
+                    context,
+                  );
+                }
+                if (userCredential != null) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
                   );
                 }
               },

@@ -5,9 +5,10 @@ import 'package:renbo/utils/constants.dart';
 import 'package:renbo/screens/chat_screen.dart';
 import 'package:renbo/screens/meditation_screen.dart';
 import 'package:renbo/screens/sessions_screen.dart';
-import 'package:renbo/screens/emotion_tracker.dart'; // Correct import for the emotion tracker screen
-import 'package:renbo/screens/hotlines_screen.dart'; // ✅ Import your new hotlines screen
+import 'package:renbo/screens/emotion_tracker.dart';
+import 'package:renbo/screens/hotlines_screen.dart';
 import 'package:renbo/widgets/mood_card.dart';
+import 'package:renbo/screens/stress_tap_game.dart'; // Using the new game file
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -95,8 +96,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-
-        // ✅ New Row for Hotlines button
         Row(
           children: [
             _buildButton(
@@ -108,9 +107,20 @@ class HomeScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => HotlinesScreen()),
               ),
             ),
-            // If you want, you can leave space for future buttons
             const SizedBox(width: 16),
-            Expanded(child: Container()), // keeps layout aligned
+            _buildButton(
+              context,
+              icon: Icons.videogame_asset_outlined,
+              label: 'Game',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) =>
+                        const RelaxGame()), // Updated to the new game
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Container()),
           ],
         ),
       ],

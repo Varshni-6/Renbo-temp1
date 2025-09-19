@@ -9,8 +9,6 @@ import 'package:flutter/services.dart';
 import 'screens/emotion_tracker.dart';
 import 'screens/journal_entries.dart';
 import 'screens/journal_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +19,6 @@ void main() async {
 
   // Load the .env file before running the app
   await dotenv.load(fileName: ".env");
-
-  // Initialize Firebase before all other services
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
 
   await Hive.initFlutter();
   Hive.registerAdapter(JournalEntryAdapter());
