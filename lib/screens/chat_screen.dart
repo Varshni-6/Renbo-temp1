@@ -50,6 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
+    // Add user message to UI immediately
     setState(() {
       _messages.add({'sender': 'user', 'text': text});
       _isLoading = true;
@@ -64,6 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _showHotlineSuggestion();
       }
 
+      // Add the bot's response to the chat.
       if (mounted) {
         setState(() {
           _messages.add({'sender': 'bot', 'text': classifiedResponse.response});
@@ -110,14 +112,14 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text("Not Now"),
           ),
+  
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                )),
             onPressed: () {
               Navigator.pop(context);
               Navigator.push(
@@ -182,9 +184,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 final message = _messages[index];
                 final isSender = message['sender'] == 'user';
                 return Row(
-                  mainAxisAlignment: isSender
-                      ? MainAxisAlignment.end
-                      : MainAxisAlignment.start,
+                  mainAxisAlignment:
+                      isSender ? MainAxisAlignment.end : MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Flexible(
