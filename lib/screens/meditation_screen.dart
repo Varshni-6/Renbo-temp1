@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:renbo/utils/theme.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
+import 'white_noise_synthesizer.dart';
+import 'breathing_guide_page.dart';
 
 class MeditationScreen extends StatefulWidget {
   const MeditationScreen({super.key});
@@ -12,6 +15,11 @@ class MeditationScreen extends StatefulWidget {
 
 class _MeditationScreenState extends State<MeditationScreen> {
   final player = AudioPlayer();
+  late Timer _meditationTimer;
+
+  Duration _meditationTime = Duration.zero;
+  bool _meditationTimerIsRunning = false;
+
   bool isPlaying = false;
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
@@ -53,6 +61,35 @@ class _MeditationScreenState extends State<MeditationScreen> {
     });
   }
 
+  void _startMeditationTimer() {
+    if (_meditationTimerIsRunning) {
+      return;
+    }
+    _meditationTimerIsRunning = true;
+    _meditationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _meditationTime += const Duration(seconds: 1);
+      });
+    });
+  }
+
+  void _pauseMeditationTimer() {
+    if (_meditationTimerIsRunning) {
+      _meditationTimerIsRunning = false;
+      _meditationTimer.cancel();
+    }
+  }
+
+  void _resetMeditationTimer() {
+    if (_meditationTimerIsRunning) {
+      _meditationTimer.cancel();
+    }
+    setState(() {
+      _meditationTime = Duration.zero;
+      _meditationTimerIsRunning = false;
+    });
+  }
+
   String _formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(d.inMinutes.remainder(60));
@@ -63,17 +100,16 @@ class _MeditationScreenState extends State<MeditationScreen> {
   @override
   void dispose() {
     player.dispose();
+    _meditationTimer.cancel();
     super.dispose();
   }
 
   void _selectTrack(int index) async {
-    // If the same track is selected, just toggle play/pause
     if (_selectedTrackIndex == index) {
       _togglePlayPause();
       return;
     }
 
-    // Stop current playback and reset position
     await player.stop();
     setState(() {
       _selectedTrackIndex = index;
@@ -82,16 +118,13 @@ class _MeditationScreenState extends State<MeditationScreen> {
       duration = Duration.zero;
     });
 
-    // Set and play new track
     final selectedTrackPath = _tracks[index]['path']!;
     await player.setSource(AssetSource(selectedTrackPath));
     await player.resume();
   }
 
   void _togglePlayPause() async {
-    if (_selectedTrackIndex == null)
-      return; // Cannot play if no track is selected
-
+    if (_selectedTrackIndex == null) return;
     if (isPlaying) {
       await player.pause();
     } else {
@@ -121,6 +154,64 @@ class _MeditationScreenState extends State<MeditationScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 20),
+            Center(
+              child: Text(
+                _formatDuration(_meditationTime),
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.darkGray),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'meditation-timer-control',
+                  onPressed: _meditationTimerIsRunning
+                      ? _pauseMeditationTimer
+                      : _startMeditationTimer,
+                  label: Text(_meditationTimerIsRunning ? 'Pause' : 'Start'),
+                  icon: Icon(_meditationTimerIsRunning
+                      ? Icons.pause
+                      : Icons.play_arrow),
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                const SizedBox(width: 16),
+                FloatingActionButton.extended(
+                  heroTag: 'meditation-timer-reset',
+                  onPressed: _resetMeditationTimer,
+                  label: const Text('Reset'),
+                  icon: const Icon(Icons.refresh),
+                  backgroundColor: AppTheme.darkGray,
+                  foregroundColor: Colors.white,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) => const BreathingGuidePage()),
+                );
+              },
+              child: const Text('Start Breathing Guide'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const WhiteNoiseSynthesizerScreen()),
+                );
+              },
+              child: const Text('White Noise Synthesiser'),
+            ),
+            const SizedBox(height: 20),
             const Text(
               'Choose a track:',
               style: TextStyle(
@@ -138,7 +229,6 @@ class _MeditationScreenState extends State<MeditationScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 20),
             if (_selectedTrackIndex != null)
               Column(
                 children: [
