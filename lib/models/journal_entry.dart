@@ -1,38 +1,41 @@
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
+import 'sticker.dart';
 
 part 'journal_entry.g.dart';
 
 @HiveType(typeId: 0)
 class JournalEntry extends HiveObject {
   @HiveField(0)
-  late String id; // Unique ID
+  String id; // removed final so Hive can assign
 
   @HiveField(1)
-  late String content;
+  String content;
 
   @HiveField(2)
-  late DateTime timestamp;
+  DateTime timestamp;
 
   @HiveField(3)
-  late String? emotion;
+  String? emotion;
 
   @HiveField(4)
-  late String? imagePath;
+  String? imagePath;
 
   @HiveField(5)
-  late String? audioPath;
+  String? audioPath;
+
+  @HiveField(6)
+  List<Sticker>? stickers;
 
   JournalEntry({
+    String? id,
     required this.content,
     required this.timestamp,
     this.emotion,
     this.imagePath,
     this.audioPath,
-  }) {
-    id = const Uuid().v4(); // Generate unique ID when new entry created
-  }
+    this.stickers,
+  }) : id = id ?? const Uuid().v4();
 
-  /// Getter for compatibility with your existing code
   String get getId => id;
 }

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:renbo/api/gemini_service.dart'; // Make sure to import your service
+import 'package:renbo/api/gemini_service.dart';
 import 'package:renbo/utils/theme.dart';
 import 'package:renbo/utils/constants.dart';
 import 'package:renbo/screens/chat_screen.dart';
 import 'package:renbo/screens/meditation_screen.dart';
-import 'package:renbo/screens/emotion_tracker.dart';
 import 'package:renbo/screens/hotlines_screen.dart';
-import 'package:renbo/screens/gratitude_bubbles_screen.dart'; // Import the new screen
 import 'package:renbo/widgets/mood_card.dart';
 import 'package:renbo/screens/stress_tap_game.dart';
+import 'package:renbo/screens/calendar_screen.dart';
+import 'package:renbo/screens/gratitude_bubbles_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// 1. CONVERTED TO A STATEFUL WIDGET
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -19,35 +19,45 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // 2. STATE VARIABLES TO HOLD THE THOUGHT AND LOADING STATE
   final GeminiService _geminiService = GeminiService();
   String _thoughtOfTheDay = "Loading a fresh thought for you...";
-  bool _isLoadingThought = true;
 
-  // 3. FETCH THE THOUGHT WHEN THE SCREEN IS FIRST BUILT
   @override
   void initState() {
     super.initState();
-    _fetchThought();
+    _fetchOrLoadThought();
   }
 
-  void _fetchThought() async {
-    try {
-      final thought = await _geminiService.generateThoughtOfTheDay();
+  void _fetchOrLoadThought() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().day;
+
+    final lastFetchedDay = prefs.getInt('lastFetchedDay');
+    final savedThought = prefs.getString('savedThought');
+
+    if (lastFetchedDay == today && savedThought != null) {
       if (mounted) {
-        // Check if the widget is still in the tree
         setState(() {
-          _thoughtOfTheDay = thought;
-          _isLoadingThought = false;
+          _thoughtOfTheDay = savedThought;
         });
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _thoughtOfTheDay =
-              "Kindness is a gift everyone can afford to give."; // Fallback
-          _isLoadingThought = false;
-        });
+    } else {
+      try {
+        final newThought = await _geminiService.generateThoughtOfTheDay();
+        if (mounted) {
+          setState(() {
+            _thoughtOfTheDay = newThought;
+          });
+          await prefs.setInt('lastFetchedDay', today);
+          await prefs.setString('savedThought', newThought);
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _thoughtOfTheDay =
+                "Kindness is a gift everyone can afford to give."; // fallback
+          });
+        }
       }
     }
   }
@@ -82,8 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // 4. UPDATED MOODCARD TO USE THE STATE VARIABLE
-              // Note: We remove 'const' because the content is now dynamic
               MoodCard(
                 title: 'Thought of the day',
                 content: _thoughtOfTheDay,
@@ -111,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Journal',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const EmotionTrackerScreen()),
+                MaterialPageRoute(builder: (_) => const CalendarScreen()),
               ),
             ),
             const SizedBox(width: 16),

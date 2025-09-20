@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/journal_storage.dart';
+import 'journal_detail.dart'; // FIXED: Corrected the file name
+import 'journal_edit_screen.dart';
 
 class JournalEntriesPage extends StatefulWidget {
+  // FIXED: Added key to constructor
+  const JournalEntriesPage({Key? key}) : super(key: key);
+
   @override
-  _JournalEntriesPageState createState() => _JournalEntriesPageState();
+  State<JournalEntriesPage> createState() => _JournalEntriesPageState();
 }
 
 class _JournalEntriesPageState extends State<JournalEntriesPage> {
@@ -13,22 +18,29 @@ class _JournalEntriesPageState extends State<JournalEntriesPage> {
   @override
   void initState() {
     super.initState();
-    _entries = JournalStorage.getEntries();
+    _loadEntries();
+  }
+
+  void _loadEntries() {
+    setState(() {
+      _entries = JournalStorage.getEntries();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Journal Entries')),
+      appBar: AppBar(title: const Text('Journal Entries')), // ADDED: const
       body: FutureBuilder<List<JournalEntry>>(
         future: _entries,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator()); // ADDED: const
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No journal entries available.'));
+            return const Center(
+                child: Text('No journal entries available.')); // ADDED: const
           } else {
             final entries = snapshot.data!;
 
@@ -38,17 +50,52 @@ class _JournalEntriesPageState extends State<JournalEntriesPage> {
                 final entry = entries[index];
 
                 return ListTile(
-                  key: Key(entry.getId), // Use the unique ID as the key
-                  title: Text(entry.content),
+                  key: Key(entry.getId),
+                  title: Text(
+                    entry.content.isEmpty
+                        ? "Journal Entry"
+                        : entry.content,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   subtitle: Text(entry.timestamp.toString()),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () async {
-                      await JournalStorage.deleteEntry(entry.getId);  // Use the getter getId here
-                      setState(() {
-                        _entries = JournalStorage.getEntries();
-                      });
-                    },
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            JournalDetailScreen(entry: entry),
+                      ),
+                    );
+                  },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // EDIT BUTTON
+                      IconButton(
+                        icon:
+                            const Icon(Icons.edit, color: Colors.blueGrey), // ADDED: const
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  JournalEditScreen(entry: entry),
+                            ),
+                          ).then((_) =>
+                              _loadEntries()); // Refresh list after edit
+                        },
+                      ),
+                      // DELETE BUTTON
+                      IconButton(
+                        icon: const Icon(Icons.delete,
+                            color: Colors.redAccent), // ADDED: const
+                        onPressed: () async {
+                          await JournalStorage.deleteEntry(entry.getId);
+                          _loadEntries(); // Refresh list after deleting
+                        },
+                      ),
+                    ],
                   ),
                 );
               },
@@ -59,3 +106,4 @@ class _JournalEntriesPageState extends State<JournalEntriesPage> {
     );
   }
 }
+

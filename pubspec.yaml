@@ -56,6 +56,7 @@ flutter:
     - assets/audio/white_noise.mp3
     - assets/audio/pink_noise.mp3
     - assets/audio/brown_noise.mp3
+    - assets/stickers/
   fonts:
     - family: Poppins
       fonts:

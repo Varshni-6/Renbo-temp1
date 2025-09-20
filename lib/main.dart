@@ -2,37 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'app.dart';
-import 'providers/mood_provider.dart';
-import 'models/journal_entry.dart';
-import 'models/gratitude.dart'; // 👈 import Gratitude model
 import 'package:flutter/services.dart';
-import 'screens/emotion_tracker.dart';
-import 'screens/journal_entries.dart';
-import 'screens/journal_screen.dart';
-import 'services/journal_storage.dart';
-import 'services/gratitude_storage.dart'; // 👈 import GratitudeStorage
 
-void main() async {
+// Models
+import 'models/journal_entry.dart';
+import 'models/gratitude.dart';
+import 'models/sticker.dart';
+
+// Storages
+import 'services/journal_storage.dart';
+import 'services/gratitude_storage.dart';
+
+// Providers
+import 'providers/mood_provider.dart';
+
+// Screens
+import 'screens/home_screen.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Lock orientation to portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
+  // Load environment variables
   await dotenv.load(fileName: ".env");
 
   // Initialize Hive
   await Hive.initFlutter();
 
-  // Register Adapters
-  Hive.registerAdapter(JournalEntryAdapter());
-  Hive.registerAdapter(GratitudeAdapter()); // 👈 register Gratitude
+try {
+  if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(JournalEntryAdapter());
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(GratitudeAdapter());
+  if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(StickerAdapter());
+} catch (e) {
+  print("Hive adapter registration failed: $e");
+}
 
-  // Initialize Storages
   await JournalStorage.init();
-  await GratitudeStorage.init(); // 👈 initialize GratitudeStorage
+  await GratitudeStorage.init();
 
+  // Run the app with Provider
   runApp(
     ChangeNotifierProvider(
       create: (context) => MoodProvider(),
@@ -47,6 +60,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Renbo',
       theme: ThemeData(
         primarySwatch: Colors.teal,
