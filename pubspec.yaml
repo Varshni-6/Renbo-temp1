@@ -32,6 +32,8 @@ dependencies:
   audioplayers: ^5.1.0
   audioplayers_platform_interface: ^6.1.0
   google_generative_ai: ^0.4.7
+  uuid: ^4.3.3
+  table_calendar: ^3.0.9 
 
 
 dev_dependencies:

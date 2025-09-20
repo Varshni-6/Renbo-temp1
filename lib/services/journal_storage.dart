@@ -5,34 +5,41 @@ class JournalStorage {
   static const String _boxName = 'journalEntries';
   static late Box<JournalEntry> _box;
 
-  static Future<List<JournalEntry>> getEntries() async {
-    return _box.values.toList();
-  }
-
-  // Method to initialize Hive and open the box
+  /// Initializes Hive and opens the journal entries box.
+  /// This should be called once when the app starts.
   static Future<void> init() async {
+    // The key for the box will now be the entry's unique ID (String),
+    // and the value will be the JournalEntry object itself.
     _box = await Hive.openBox<JournalEntry>(_boxName);
   }
 
-  // Add a new entry to the box
-  static void addEntry(JournalEntry entry) {
-    _box.add(entry);
+  /// Adds a new entry to the box.
+  /// The entry's own unique `id` is used as the key.
+  static Future<void> addEntry(JournalEntry entry) async {
+    // Using put() with the entry's ID as the key.
+    // This also works for updating if an entry with the same ID already exists.
+    await _box.put(entry.getId, entry);  // Use the getter getId here
   }
 
-  // Update an existing entry
-  static void updateEntry(int index, JournalEntry entry) {
-    if (index >= 0 && index < _box.length) {
-      _box.putAt(index, entry);
-    }
+  /// Updates an existing entry.
+  /// It finds the entry by its ID and overwrites it.
+  static Future<void> updateEntry(JournalEntry entry) async {
+    // Hive's put() method automatically handles updates.
+    // It will overwrite the existing entry that has the same key (entry.id).
+    await _box.put(entry.getId, entry);  // Use the getter getId here
   }
 
-  // Delete an entry
-  static Future<void> deleteEntry(int index) async {
-    if (index >= 0 && index < _box.length) {
-      await _box.deleteAt(index);
-    }
+  /// Deletes an entry from the box using its unique ID.
+  static Future<void> deleteEntry(String id) async {
+    await _box.delete(id);
   }
 
-  // Get all entries
-  static List<JournalEntry> get entries => _box.values.toList();
+  /// Gets all entries from the box.
+  /// The order might not be guaranteed, so we sort by timestamp.
+  static Future<List<JournalEntry>> getEntries() async {
+    var entries = _box.values.toList();
+    // Sort entries so the most recent ones appear first.
+    entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return entries;
+  }
 }

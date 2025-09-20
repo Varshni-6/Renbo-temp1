@@ -1,18 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:record/record.dart';
-import 'package:audioplayers/audioplayers.dart';
 import '../services/journal_storage.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/journal_entry.dart';
 
 class JournalEditScreen extends StatefulWidget {
   final JournalEntry entry;
-  final int index;
 
-  const JournalEditScreen({required this.entry, required this.index, Key? key})
-      : super(key: key);
+  // Constructor now only requires the entry object
+  const JournalEditScreen({required this.entry, Key? key}) : super(key: key);
 
   @override
   State<JournalEditScreen> createState() => _JournalEditScreenState();
@@ -28,8 +22,10 @@ class _JournalEditScreenState extends State<JournalEditScreen> {
   }
 
   void _saveEntry() {
+    // Update the content from the controller
     widget.entry.content = _contentController.text;
-    JournalStorage.updateEntry(widget.index, widget.entry);
+    // Call the updated storage method
+    JournalStorage.updateEntry(widget.entry);
     Navigator.pop(context);
   }
 
@@ -41,8 +37,18 @@ class _JournalEditScreenState extends State<JournalEditScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: _contentController),
-            ElevatedButton(onPressed: _saveEntry, child: const Text("Save"))
+            Expanded(
+              child: TextField(
+                controller: _contentController,
+                maxLines: null,
+                expands: true,
+                decoration: const InputDecoration(
+                  hintText: "Edit your thoughts...",
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+            ElevatedButton(onPressed: _saveEntry, child: const Text("Save Changes"))
           ],
         ),
       ),

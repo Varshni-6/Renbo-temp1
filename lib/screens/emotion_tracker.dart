@@ -71,7 +71,7 @@ class EmotionTrackerScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const JournalEntriesScreen(),
+                      builder: (context) => JournalEntriesPage(),
                     ),
                   );
                 },

@@ -40,13 +40,12 @@ class _JournalScreenState extends State<JournalScreen> {
     if (text.isEmpty && pickedImage == null && recordedAudioPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('Please write, record, or add an image before saving.')),
+          content: Text('Please write, record, or add an image before saving.'),
+        ),
       );
       return;
     }
 
-    // Correct instantiation using the constructor with named parameters.
     final entry = JournalEntry(
       content: text,
       timestamp: DateTime.now(),
@@ -59,7 +58,7 @@ class _JournalScreenState extends State<JournalScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const JournalEntriesScreen()),
+      MaterialPageRoute(builder: (_) => JournalEntriesPage()), // ✅ FIXED
     );
   }
 
@@ -103,8 +102,7 @@ class _JournalScreenState extends State<JournalScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Permission to record audio not granted.')),
+          const SnackBar(content: Text('Permission to record audio not granted.')),
         );
       }
     }
@@ -128,9 +126,7 @@ class _JournalScreenState extends State<JournalScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Speech recognition not available."),
-        ),
+        const SnackBar(content: Text("Speech recognition not available.")),
       );
     }
   }
@@ -151,8 +147,10 @@ class _JournalScreenState extends State<JournalScreen> {
       backgroundColor: const Color(0xFFFFF5F2),
       appBar: AppBar(
         backgroundColor: const Color(0xFF568F87),
-        title: Text("Journaling - ${widget.emotion}",
-            style: const TextStyle(color: Colors.white)),
+        title: Text(
+          "Journaling - ${widget.emotion}",
+          style: const TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -197,8 +195,10 @@ class _JournalScreenState extends State<JournalScreen> {
             if (recordedAudioPath != null)
               const Padding(
                 padding: EdgeInsets.only(top: 16),
-                child: Text('Audio recorded.',
-                    style: TextStyle(color: Colors.green)),
+                child: Text(
+                  'Audio recorded.',
+                  style: TextStyle(color: Colors.green),
+                ),
               ),
             const SizedBox(height: 16),
             Row(
@@ -206,20 +206,22 @@ class _JournalScreenState extends State<JournalScreen> {
               children: [
                 ElevatedButton.icon(
                   onPressed: _startStopRecording,
-                  icon: Icon(isRecording ? Icons.stop : Icons.mic,
-                      color: Colors.white),
-                  label: Text(isRecording ? 'Stop Recording' : 'Voice Journal',
-                      style: const TextStyle(color: Colors.white)),
+                  icon: Icon(
+                    isRecording ? Icons.stop : Icons.mic,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    isRecording ? 'Stop Recording' : 'Voice Journal',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isRecording ? Colors.red : const Color(0xFF568F87),
+                    backgroundColor: isRecording ? Colors.red : const Color(0xFF568F87),
                   ),
                 ),
                 ElevatedButton.icon(
                   onPressed: _pickImage,
                   icon: const Icon(Icons.image, color: Colors.white),
-                  label: const Text('Add Image',
-                      style: TextStyle(color: Colors.white)),
+                  label: const Text('Add Image', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF568F87),
                   ),
@@ -232,20 +234,22 @@ class _JournalScreenState extends State<JournalScreen> {
               children: [
                 ElevatedButton.icon(
                   onPressed: _isListening ? _stopListening : _startListening,
-                  icon: Icon(_isListening ? Icons.mic_off : Icons.mic,
-                      color: Colors.white),
-                  label: Text(_isListening ? 'Stop STT' : 'Start STT',
-                      style: const TextStyle(color: Colors.white)),
+                  icon: Icon(
+                    _isListening ? Icons.mic_off : Icons.mic,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    _isListening ? 'Stop STT' : 'Start STT',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _isListening ? Colors.blue : const Color(0xFF568F87),
+                    backgroundColor: _isListening ? Colors.blue : const Color(0xFF568F87),
                   ),
                 ),
                 ElevatedButton.icon(
                   onPressed: _speakText,
                   icon: const Icon(Icons.volume_up, color: Colors.white),
-                  label: const Text('Read Aloud',
-                      style: TextStyle(color: Colors.white)),
+                  label: const Text('Read Aloud', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF568F87),
                   ),
@@ -257,8 +261,7 @@ class _JournalScreenState extends State<JournalScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF568F87),
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
