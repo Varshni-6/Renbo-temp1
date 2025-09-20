@@ -6,6 +6,7 @@ import 'package:renbo/screens/chat_screen.dart';
 import 'package:renbo/screens/meditation_screen.dart';
 import 'package:renbo/screens/emotion_tracker.dart';
 import 'package:renbo/screens/hotlines_screen.dart';
+import 'package:renbo/screens/gratitude_bubbles_screen.dart'; // Import the new screen
 import 'package:renbo/widgets/mood_card.dart';
 import 'package:renbo/screens/stress_tap_game.dart';
 
@@ -33,7 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _fetchThought() async {
     try {
       final thought = await _geminiService.generateThoughtOfTheDay();
-      if (mounted) { // Check if the widget is still in the tree
+      if (mounted) {
+        // Check if the widget is still in the tree
         setState(() {
           _thoughtOfTheDay = thought;
           _isLoadingThought = false;
@@ -42,7 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _thoughtOfTheDay = "Kindness is a gift everyone can afford to give."; // Fallback
+          _thoughtOfTheDay =
+              "Kindness is a gift everyone can afford to give."; // Fallback
           _isLoadingThought = false;
         });
       }
@@ -96,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   Widget _buildMainButtons(BuildContext context) {
     return Column(
@@ -153,13 +155,20 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Game',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        const RelaxGame()), // Updated to the new game
+                MaterialPageRoute(builder: (_) => const RelaxGame()),
               ),
             ),
             const SizedBox(width: 16),
-            Expanded(child: Container()),
+            _buildButton(
+              context,
+              icon: Icons.favorite_border,
+              label: 'Gratitudes',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const GratitudeBubblesScreen()),
+              ),
+            ),
           ],
         ),
       ],

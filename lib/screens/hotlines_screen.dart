@@ -22,23 +22,25 @@ class HotlinesScreen extends StatelessWidget {
   final List<Hotline> hotlines = [
     Hotline(
       name: "KIRAN Mental Health Helpline",
-      description: "24/7 support for stress, anxiety, depression, suicidal thoughts.",
+      description:
+          "24/7 support for stress, anxiety, depression, suicidal thoughts.",
       contactPerson: "Trained Mental Health Counselors",
       phone: "18005990019",
     ),
     Hotline(
       name: "Vandrevala Foundation Helpline",
-      description: "Support for emotional distress, depression, suicidal thoughts.",
+      description:
+          "Support for emotional distress, depression, suicidal thoughts.",
       contactPerson: "Counselors at Vandrevala Foundation",
       phone: "18602662345",
     ),
     Hotline(
       name: "Snehi (Delhi-based NGO)",
-      description: "Emotional support for suicide prevention & crisis intervention.",
+      description:
+          "Emotional support for suicide prevention & crisis intervention.",
       contactPerson: "Snehi Volunteer Counselors",
       phone: "9582208181",
     ),
-
   ];
 
   /// Initiates a phone call to the provided [phoneNumber].
@@ -76,7 +78,8 @@ class HotlinesScreen extends StatelessWidget {
             elevation: 4,
             shadowColor: Colors.deepPurple.withOpacity(0.2),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               title: Text(
                 hotline.name,
                 style: const TextStyle(
