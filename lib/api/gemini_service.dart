@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:renbo/utils/constants.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 /// A data class to hold the structured response from the Gemini API.
 class GeminiClassifiedResponse {
@@ -13,17 +14,29 @@ class GeminiClassifiedResponse {
   });
 }
 
+// *** FIX: THERE IS ONLY ONE GeminiService CLASS DEFINITION NOW ***
 class GeminiService {
   final String _apiKey = AppConstants.geminiApiKey;
+  
+  // For the manual HTTP request
   final String _modelUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=';
 
-  /// *FIX*: Defines the 'generateAndClassify' method to match what is called in chat_screen.dart
+  // *** FIX: Initialize the GenerativeModel from the SDK ***
+  // This is needed for the generateThoughtOfTheDay method.
+  final GenerativeModel _model;
+
+  // Constructor to initialize the model
+  GeminiService()
+      : _model = GenerativeModel(
+          model: 'gemini-2.5-flash-preview-05-20',
+          apiKey: AppConstants.geminiApiKey,
+        );
+
+  /// Your existing method for chat classification - no changes needed here.
   Future<GeminiClassifiedResponse> generateAndClassify(String prompt) async {
     final headers = {'Content-Type': 'application/json'};
-
-    // This single prompt instructs the model to perform both tasks
-    // and return a structured JSON object.
+    
     final systemPrompt = """
 You are Renbot, a supportive and non-judgmental AI assistant. Your role is to provide a safe space for users to express their thoughts and feelings. First, create an empathetic and supportive response to the user's message. Second, classify the user's message for self-harm or suicidal ideation.
 ** always be empathetic and supportive in your response. **
@@ -61,7 +74,6 @@ User's message: "$prompt"
           ]
         }
       ],
-      // We explicitly ask for a JSON response.
       "generationConfig": {
         "responseMimeType": "application/json",
       }
@@ -76,7 +88,6 @@ User's message: "$prompt"
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // The model's response is a JSON string that we need to parse again.
         final jsonString = data['candidates'][0]['content']['parts'][0]['text'];
         final classifiedData = jsonDecode(jsonString);
 
@@ -86,14 +97,31 @@ User's message: "$prompt"
               "I'm having trouble understanding right now. Could we talk about something else?",
         );
       } else {
-        // Return a default "safe" response in case of API errors.
         return GeminiClassifiedResponse();
       }
     } catch (e) {
-      // Return a default "safe" response for network or parsing errors.
       return GeminiClassifiedResponse(
           response:
               "Something went wrong. Please check your internet connection. 😞");
+    }
+  }
+
+  // *** FIX: THE NEW METHOD IS NOW INSIDE THE CORRECT CLASS ***
+  Future<String> generateThoughtOfTheDay() async {
+    try {
+      const prompt =
+          'Generate a short, positive, and insightful thought of the day for a mental wellness app. Make it concise and uplifting, like a fortune cookie message.';
+      
+      final response = await _model.generateContent([Content.text(prompt)]);
+
+      if (response.text != null) {
+        return response.text!;
+      } else {
+        return "The best way to predict the future is to create it."; // A fallback thought
+      }
+    } catch (e) {
+      print("Error generating thought: $e");
+      return "Kindness is a language which the deaf can hear and the blind can see."; // An error fallback
     }
   }
 }
