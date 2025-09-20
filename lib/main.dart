@@ -5,12 +5,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app.dart';
 import 'providers/mood_provider.dart';
 import 'models/journal_entry.dart';
+import 'models/gratitude.dart'; // 👈 import Gratitude model
 import 'package:flutter/services.dart';
 import 'screens/emotion_tracker.dart';
 import 'screens/journal_entries.dart';
 import 'screens/journal_screen.dart';
-import 'models/gratitude.dart';
-import 'services/gratitude_storage.dart';
+import 'services/journal_storage.dart';
+import 'services/gratitude_storage.dart'; // 👈 import GratitudeStorage
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,13 +23,16 @@ void main() async {
   // Load the .env file before running the app
   await dotenv.load(fileName: ".env");
 
+  // Initialize Hive
   await Hive.initFlutter();
-  Hive.registerAdapter(JournalEntryAdapter());
-  await Hive.openBox<JournalEntry>('journalEntries');
 
-  // Register and initialize the Gratitude Hive box
-  Hive.registerAdapter(GratitudeAdapter());
-  await GratitudeStorage.init();
+  // Register Adapters
+  Hive.registerAdapter(JournalEntryAdapter());
+  Hive.registerAdapter(GratitudeAdapter()); // 👈 register Gratitude
+
+  // Initialize Storages
+  await JournalStorage.init();
+  await GratitudeStorage.init(); // 👈 initialize GratitudeStorage
 
   runApp(
     ChangeNotifierProvider(

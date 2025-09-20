@@ -58,8 +58,10 @@ class _GratitudeBubblesScreenState extends State<GratitudeBubblesScreen>
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Add a Gratitude',
-            style: TextStyle(color: AppTheme.darkGray)),
+        title: const Text(
+          'Add a Gratitude',
+          style: TextStyle(color: AppTheme.darkGray),
+        ),
         content: TextField(
           controller: _controller,
           autofocus: true,
@@ -78,8 +80,10 @@ class _GratitudeBubblesScreenState extends State<GratitudeBubblesScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppTheme.mediumGray)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.mediumGray),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -103,8 +107,10 @@ class _GratitudeBubblesScreenState extends State<GratitudeBubblesScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Gratitude Bubbles',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Gratitude Bubbles',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -124,7 +130,7 @@ class _GratitudeBubblesScreenState extends State<GratitudeBubblesScreen>
               ),
             ),
           ..._gratitudes.map((gratitude) {
-            final double size = 60.0 + gratitude.text.length * 1.5;
+            const double size = 60.0; // fixed bubble size (empty inside)
             final double xOffset = _random.nextDouble() * 200 - 100;
             final double yOffset = _random.nextDouble() * 200 - 100;
 
@@ -134,6 +140,7 @@ class _GratitudeBubblesScreenState extends State<GratitudeBubblesScreen>
               animation: _animationController,
               xOffset: xOffset,
               yOffset: yOffset,
+              onUpdated: _loadGratitudes, // refresh UI after edit/delete
             );
           }).toList(),
         ],

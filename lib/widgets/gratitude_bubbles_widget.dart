@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:renbo/models/gratitude.dart';
 import 'package:renbo/utils/theme.dart';
 import 'package:intl/intl.dart';
+import 'package:renbo/services/gratitude_storage.dart';
 
 class GratitudeBubble extends AnimatedWidget {
   final Gratitude gratitude;
   final double bubbleSize;
   final double xOffset;
   final double yOffset;
+  final VoidCallback onUpdated; // callback to refresh list after edit/delete
 
   const GratitudeBubble({
     super.key,
@@ -17,6 +19,7 @@ class GratitudeBubble extends AnimatedWidget {
     required this.xOffset,
     required this.yOffset,
     required Animation<double> animation,
+    required this.onUpdated,
   }) : super(listenable: animation);
 
   @override
@@ -37,11 +40,8 @@ class GratitudeBubble extends AnimatedWidget {
         child: Opacity(
           opacity: 0.8,
           child: Container(
-            padding: const EdgeInsets.all(12),
-            constraints: BoxConstraints(
-              minWidth: bubbleSize,
-              minHeight: bubbleSize,
-            ),
+            width: bubbleSize,
+            height: bubbleSize,
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 53, 135, 212).withOpacity(0.5),
               shape: BoxShape.circle,
@@ -53,17 +53,6 @@ class GratitudeBubble extends AnimatedWidget {
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                gratitude.text,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
           ),
         ),
       ),
@@ -74,6 +63,9 @@ class GratitudeBubble extends AnimatedWidget {
     final formattedDate =
         DateFormat('MMMM d, yyyy').format(gratitude.timestamp);
     final formattedTime = DateFormat('h:mm a').format(gratitude.timestamp);
+
+    final TextEditingController editController =
+        TextEditingController(text: gratitude.text);
 
     showDialog(
       context: context,
@@ -105,6 +97,22 @@ class GratitudeBubble extends AnimatedWidget {
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showEditDialog(context, editController);
+            },
+            child: const Text("Edit",
+                style: TextStyle(color: AppTheme.primaryColor)),
+          ),
+          TextButton(
+            onPressed: () {
+              gratitude.delete();
+              Navigator.of(context).pop();
+              onUpdated(); // refresh after delete
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
             style: ElevatedButton.styleFrom(
@@ -113,6 +121,39 @@ class GratitudeBubble extends AnimatedWidget {
                   borderRadius: BorderRadius.circular(15)),
             ),
             child: const Text('Close', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, TextEditingController controller) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Gratitude"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: "Update your gratitude...",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              gratitude.text = controller.text.trim();
+              gratitude.save(); // save changes to Hive
+              Navigator.of(context).pop();
+              onUpdated(); // refresh after edit
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+            ),
+            child: const Text("Save", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
