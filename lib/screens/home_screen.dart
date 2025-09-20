@@ -9,7 +9,8 @@ import 'package:renbo/screens/emotion_tracker.dart';
 import 'package:renbo/screens/hotlines_screen.dart';
 import 'package:renbo/widgets/mood_card.dart';
 import 'package:renbo/screens/stress_tap_game.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:renbo/screens/settings_page.dart'; // This is the new import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,7 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // This is the updated navigation logic
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
