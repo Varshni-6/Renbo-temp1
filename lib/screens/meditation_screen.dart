@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:renbo/utils/theme.dart';
-import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import 'white_noise_synthesizer.dart';
@@ -13,7 +12,8 @@ class MeditationScreen extends StatefulWidget {
   State<MeditationScreen> createState() => _MeditationScreenState();
 }
 
-class _MeditationScreenState extends State<MeditationScreen> {
+class _MeditationScreenState extends State<MeditationScreen>
+    with SingleTickerProviderStateMixin {
   final player = AudioPlayer();
   late Timer _meditationTimer;
 
@@ -62,9 +62,6 @@ class _MeditationScreenState extends State<MeditationScreen> {
   }
 
   void _startMeditationTimer() {
-    if (_meditationTimerIsRunning) {
-      return;
-    }
     _meditationTimerIsRunning = true;
     _meditationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -120,6 +117,7 @@ class _MeditationScreenState extends State<MeditationScreen> {
 
     final selectedTrackPath = _tracks[index]['path']!;
     await player.setSource(AssetSource(selectedTrackPath));
+    await player.setReleaseMode(ReleaseMode.loop); // Added to loop the audio
     await player.resume();
   }
 
@@ -154,14 +152,31 @@ class _MeditationScreenState extends State<MeditationScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 20),
-            Center(
-              child: Text(
-                _formatDuration(_meditationTime),
-                style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.darkGray),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) => const BreathingGuidePage()),
+                    );
+                  },
+                  icon: const Icon(Icons.self_improvement),
+                  label: const Text('Breathing Guide'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const WhiteNoiseSynthesizerScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.graphic_eq),
+                  label: const Text('White Noise'),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             Row(
@@ -190,26 +205,15 @@ class _MeditationScreenState extends State<MeditationScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) => const BreathingGuidePage()),
-                );
-              },
-              child: const Text('Start Breathing Guide'),
-            ),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const WhiteNoiseSynthesizerScreen()),
-                );
-              },
-              child: const Text('White Noise Synthesiser'),
+            Center(
+              child: Text(
+                _formatDuration(_meditationTime),
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.darkGray),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -239,7 +243,6 @@ class _MeditationScreenState extends State<MeditationScreen> {
                     onChanged: (value) async {
                       final newPosition = Duration(seconds: value.toInt());
                       await player.seek(newPosition);
-                      if (isPlaying) await player.resume();
                     },
                     activeColor: AppTheme.primaryColor,
                     inactiveColor: AppTheme.primaryColor.withOpacity(0.3),

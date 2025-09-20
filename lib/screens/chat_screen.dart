@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:renbo/api/gemini_service.dart';
 import 'package:renbo/utils/theme.dart';
 import 'package:renbo/widgets/chat_bubble.dart';
-import 'hotlines_screen.dart'; // <-- import your hotlines screen
+import 'hotlines_screen.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -17,17 +19,32 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  // 🔎 Keywords for harmful/suicidal thoughts
-  final List<String> _alertKeywords = [
-    "suicide",
-    "kill myself",
-    "end my life",
-    "want to die",
-    "hopeless",
-    "can't go on",
-    "give up",
-    "depressed",
-  ];
+  // State for Speech-to-Text
+  final SpeechToText _speechToText = SpeechToText();
+  bool _isListening = false;
+
+  // State for Text-to-Speech
+  final FlutterTts _flutterTts = FlutterTts();
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeechToText();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _speechToText.stop();
+    _flutterTts.stop();
+    super.dispose();
+  }
+
+  void _initSpeechToText() async {
+    await _speechToText.initialize(
+      onError: (e) => debugPrint('STT Error: $e'),
+    );
+  }
 
   void _sendMessage() async {
     final text = _controller.text.trim();
@@ -40,34 +57,49 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _controller.clear();
 
-    // 🔎 Check for suicidal/harmful thoughts
-    if (_alertKeywords.any((word) => text.toLowerCase().contains(word))) {
-      _showHotlineSuggestion();
-    }
-
     try {
-      final response = await _geminiService.getGeminiResponse(text);
-      setState(() {
-        _messages.add({'sender': 'bot', 'text': response});
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _messages.add({
-          'sender': 'bot',
-          'text': 'I couldn\'t get a response. Try again. 😞',
+      final classifiedResponse = await _geminiService.generateAndClassify(text);
+
+      if (classifiedResponse.isHarmful && mounted) {
+        _showHotlineSuggestion();
+      }
+
+      if (mounted) {
+        setState(() {
+          _messages.add({'sender': 'bot', 'text': classifiedResponse.response});
         });
-        _isLoading = false;
-      });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'sender': 'bot',
+            'text': 'I couldn\'t get a response. Try again. 😞',
+          });
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  // ⚠️ Show hotline dialog
   void _showHotlineSuggestion() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("⚠️ You’re Not Alone"),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 10),
+            Text("You’re Not Alone"),
+          ],
+        ),
         content: const Text(
           "It sounds like you’re going through a really tough time. "
           "Please consider reaching out to a professional for immediate help.\n\n"
@@ -79,8 +111,15 @@ class _ChatScreenState extends State<ChatScreen> {
             child: const Text("Not Now"),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
             onPressed: () {
-              Navigator.pop(context); // close dialog
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => HotlinesScreen()),
@@ -93,12 +132,40 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _toggleListening() async {
+    if (_isListening) {
+      _speechToText.stop();
+      setState(() => _isListening = false);
+    } else {
+      bool available = await _speechToText.hasPermission;
+      if (available) {
+        setState(() => _isListening = true);
+        _speechToText.listen(
+          onResult: (result) {
+            setState(() {
+              _controller.text = result.recognizedWords;
+            });
+            if (result.finalResult) {
+              _speechToText.stop();
+              setState(() => _isListening = false);
+              _sendMessage();
+            }
+          },
+        );
+      }
+    }
+  }
+
+  void _speakText(String text) {
+    _flutterTts.speak(text);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Renbot',
+          'Chat with Renbot',
           style: TextStyle(
             color: AppTheme.darkGray,
             fontWeight: FontWeight.bold,
@@ -113,9 +180,25 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                return ChatBubble(
-                  text: message['text']!,
-                  isSender: message['sender'] == 'user',
+                final isSender = message['sender'] == 'user';
+                return Row(
+                  mainAxisAlignment: isSender
+                      ? MainAxisAlignment.end
+                      : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: ChatBubble(
+                        text: message['text']!,
+                        isSender: isSender,
+                      ),
+                    ),
+                    if (!isSender)
+                      IconButton(
+                        icon: const Icon(Icons.volume_up, size: 20),
+                        onPressed: () => _speakText(message['text']!),
+                      ),
+                  ],
                 );
               },
             ),
@@ -141,7 +224,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
-                hintText: 'Type a message...',
+                hintText: _isListening ? 'Listening...' : 'Type a message...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
@@ -151,6 +234,20 @@ class _ChatScreenState extends State<ChatScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20.0),
               ),
               onSubmitted: (_) => _sendMessage(),
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          Container(
+            decoration: BoxDecoration(
+              color: _isListening
+                  ? AppTheme.secondaryColor
+                  : AppTheme.primaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(_isListening ? Icons.mic_off : Icons.mic,
+                  color: Colors.white),
+              onPressed: _toggleListening,
             ),
           ),
           const SizedBox(width: 8.0),
