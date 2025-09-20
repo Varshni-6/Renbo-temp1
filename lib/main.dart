@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'screens/emotion_tracker.dart';
 import 'screens/journal_entries.dart';
 import 'screens/journal_screen.dart';
+import 'models/gratitude.dart';
+import 'services/gratitude_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,10 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(JournalEntryAdapter());
   await Hive.openBox<JournalEntry>('journalEntries');
+
+  // Register and initialize the Gratitude Hive box
+  Hive.registerAdapter(GratitudeAdapter());
+  await GratitudeStorage.init();
 
   runApp(
     ChangeNotifierProvider(

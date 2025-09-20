@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:renbo/utils/theme.dart';
 import 'package:renbo/utils/constants.dart';
 import 'package:renbo/screens/chat_screen.dart';
@@ -7,8 +6,9 @@ import 'package:renbo/screens/meditation_screen.dart';
 import 'package:renbo/screens/sessions_screen.dart';
 import 'package:renbo/screens/emotion_tracker.dart';
 import 'package:renbo/screens/hotlines_screen.dart';
+import 'package:renbo/screens/gratitude_bubbles_screen.dart'; // Import the new screen
 import 'package:renbo/widgets/mood_card.dart';
-import 'package:renbo/screens/stress_tap_game.dart'; // Using the new game file
+import 'package:renbo/screens/stress_tap_game.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -114,13 +114,20 @@ class HomeScreen extends StatelessWidget {
               label: 'Game',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        const RelaxGame()), // Updated to the new game
+                MaterialPageRoute(builder: (_) => const RelaxGame()),
               ),
             ),
             const SizedBox(width: 16),
-            Expanded(child: Container()),
+            _buildButton(
+              context,
+              icon: Icons.favorite_border,
+              label: 'Gratitudes',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const GratitudeBubblesScreen()),
+              ),
+            ),
           ],
         ),
       ],
