@@ -8,10 +8,32 @@ import 'package:renbo/screens/sessions_screen.dart';
 import 'package:renbo/screens/emotion_tracker.dart';
 import 'package:renbo/screens/hotlines_screen.dart';
 import 'package:renbo/widgets/mood_card.dart';
-import 'package:renbo/screens/stress_tap_game.dart'; // Using the new game file
+import 'package:renbo/screens/stress_tap_game.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _userName = "User";
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to Firebase Auth state changes
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        setState(() {
+          // If the user's display name is set, use it. Otherwise, keep the default.
+          _userName = user.displayName ?? "User";
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +56,10 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Good Afternoon, ${AppConstants.initialUsername}!',
-                style: TextStyle(
+              // Use the dynamic user name and the new greeting
+              Text(
+                'Hello, $_userName!',
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.darkGray,
@@ -128,11 +151,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required VoidCallback onTap,
+      }) {
     return Expanded(
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

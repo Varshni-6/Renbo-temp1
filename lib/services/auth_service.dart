@@ -27,14 +27,18 @@ class AuthService {
     }
   }
 
-  // A method to sign up with email and password
+  // A method to sign up with email and password, now accepts a 'name' parameter
   Future<UserCredential?> signUp(
-      String email, String password, BuildContext context) async {
+      String email, String password, BuildContext context, String name) async {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      
+      // Update the user's profile with the provided name
+      await userCredential.user?.updateDisplayName(name);
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       // DEBUGGING TIP: If sign-up fails, check your Firebase project settings.

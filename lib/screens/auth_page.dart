@@ -13,6 +13,7 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   bool isLogin = true;
   final AuthService _authService = AuthService();
 
@@ -24,6 +25,11 @@ class _AuthPageState extends State<AuthPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            if (!isLogin)
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Your Name"),
+              ),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: "Email"),
@@ -44,10 +50,12 @@ class _AuthPageState extends State<AuthPage> {
                     context,
                   );
                 } else {
+                  // Pass the name from the new controller
                   userCredential = await _authService.signUp(
                     emailController.text,
                     passwordController.text,
                     context,
+                    nameController.text,
                   );
                 }
                 if (userCredential != null) {

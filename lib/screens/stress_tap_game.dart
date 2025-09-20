@@ -2,24 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const Gameu());
-}
-
-class Gameu extends StatelessWidget {
-  const Gameu({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Gameu',
-      theme: ThemeData.dark(),
-      debugShowCheckedModeBanner: false,
-      home: const RelaxGame(),
-    );
-  }
-}
-
 class RelaxGame extends StatefulWidget {
   const RelaxGame({super.key});
 
